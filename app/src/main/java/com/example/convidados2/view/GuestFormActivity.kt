@@ -26,7 +26,11 @@ class GuestFormActivity : AppCompatActivity() {
         binding.buttonSave.setOnClickListener{
             val name = binding.editName.text.toString()
             val isPresent = binding.radioPresent.isChecked
-            val guest = GuestModel(guestId, name , isPresent)
+            val guest = GuestModel().apply {
+                this.id = guestId
+                this.name = name
+                this.presence = isPresent
+            }
 
             if(guestId == 0 ) {
                 viewModel.insert(guest)

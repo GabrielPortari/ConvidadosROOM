@@ -1,29 +1,41 @@
 package com.example.convidados2.repository
 
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
-import com.example.convidados2.constants.MyConstants
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.convidados2.model.GuestModel
 
 /* CRIAR O BANCO DE DADOS // ATUALIZAR O BANCO DE DADOS */
-class GuestDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VERSION) {
+
+@Database(entities = [GuestModel::class], version = 1)
+abstract class GuestDatabase() : RoomDatabase(){
+
+    abstract fun guestDAO(): GuestDAO
 
     companion object{
-        private const val NAME = "guestdb"
-        private const val VERSION = 1
+        private lateinit var INSTANCE: GuestDatabase
 
+        fun getDatabase(context: Context): GuestDatabase {
+            if(!::INSTANCE.isInitialized) {
+                synchronized(GuestDatabase::class){
+                    INSTANCE = Room.databaseBuilder(context, GuestDatabase::class.java, "guestdb")
+                        .addMigrations()
+                        .allowMainThreadQueries()
+                        .build()
+                }
+            }
+            return INSTANCE
+        }
     }
-    override fun onCreate(db: SQLiteDatabase?) {
-        val sql = "CREATE TABLE "+ MyConstants.DATABASE.TABLE_NAME +"(" +
-                MyConstants.DATABASE.COLUMNS.ID + " integer primary key autoincrement, " +
-                MyConstants.DATABASE.COLUMNS.NAME + " text, " +
-                MyConstants.DATABASE.COLUMNS.PRESENCE + " integer);"
 
-        db?.execSQL(sql)
-    }
+    private val MIGRATION_1_2: Migration = object: Migration(1, 2){
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DELETE FROM Guest")
+        }
 
-    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        TODO("Not yet implemented")
     }
 
 }
